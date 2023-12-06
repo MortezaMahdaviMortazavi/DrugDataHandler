@@ -6,7 +6,7 @@ import openpyxl
 
 
 ############################################################### Config ##############################################################
-file_path = 'dataset/mordad26/8UY4Syv5QK-swiss.xlsx'
+file_path = 'yes_no_1.xlsx'
 wb = openpyxl.load_workbook(file_path)
 ws = wb.active
 puncs = string.punctuation
@@ -14,8 +14,10 @@ red_fill = PatternFill(start_color='FF0000', end_color='FF0000', fill_type='soli
 #####################################################################################################################################
 
 def highlight_cells_boolean_case(col_name, col_data,col_idx,value_to_check, fill_color):
-    for cell_idx, cell_value in enumerate(col_data, start=0):
-        if cell_idx == 1:
+    if not col_name:
+        return
+    for cell_idx, cell_value in enumerate(col_data, start=1):
+        if cell_idx == 2:
             continue
         if cell_value != value_to_check:
             cell = ws.cell(row=cell_idx, column=col_idx)
@@ -30,6 +32,10 @@ def extract_equality(s):
     elif ' >= ' in s:
         parts = s.split(' >= ')
         operator = '>='
+    elif ' >=' in s:
+        parts = s.split(' >=')
+        operator = '>='
+
     elif ' > ' in s:
         parts = s.split(' > ')
         operator = '>'
@@ -61,7 +67,9 @@ def processor():
     for col_idx, column in enumerate(ws.iter_cols(), start=1):
         col_data = [cell.value for cell in column]
         col_name = column[0].value
-        print("col name is",col_name)
+        if col_name is None:
+            continue
+        # print("col name is",col_name)
 
 
         if col_name is None or 'Unnamed' in col_name:
@@ -106,14 +114,19 @@ def processor():
                         cell_value = float(str(cell_value).replace("%",""))
                     except (ValueError, TypeError):
                         continue
-                    
-                if (operator == '>' and cell_value <= threshold) or \
-                (operator == '<' and cell_value >= threshold) or \
-                (operator == '>=' and cell_value < threshold) or \
-                (operator == '<=' and cell_value > threshold) or \
-                (operator == '==' and cell_value != threshold):
-                    cell = ws.cell(row=cell_idx, column=col_idx)
-                    cell.fill = red_fill
+                
+                # print(operator,cell_value,threshold)
+                try:
+                    if (operator == '>' and cell_value <= threshold) or \
+                    (operator == '<' and cell_value >= threshold) or \
+                    (operator == '>=' and cell_value < threshold) or \
+                    (operator == '<=' and cell_value > threshold) or \
+                    (operator == '==' and cell_value != threshold):
+                        cell = ws.cell(row=cell_idx, column=col_idx)
+                        cell.fill = red_fill
+
+                except:
+                    pass
 
 
         else:
@@ -151,7 +164,7 @@ def processor():
 
 processor()
 # # Save the modified workbook
-modified_file_path = f'colorize_8UY4Syv5QK-swiss.xlsx'
+modified_file_path = f'colorize_yes_no2.xlsx'
 wb.save(modified_file_path)
 wb.close()
 print("Cell highlighting completed.")
